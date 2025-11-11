@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 class User(BaseModel):
   name: str
@@ -8,3 +9,11 @@ class User(BaseModel):
 class Categories(BaseModel):
   name: str
   type: str
+
+class Transactions(BaseModel):
+  value: float
+  description: str
+  date: datetime
+  type: str
+  category_id: int
+  user_id: int
