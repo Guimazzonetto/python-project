@@ -68,7 +68,7 @@ async def get_all_categories():
         status_code=404
       )
   except Exception as e:
-    logger.exception(f'Error while seatching categories: {e}')
+    logger.exception(f'Error while searching categories: {e}')
     return JSONResponse(
       content={"message": "Internal server error"},
       status_code=500
