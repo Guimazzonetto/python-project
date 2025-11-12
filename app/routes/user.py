@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+from pymongo.errors import DuplicateKeyError
 
 from  ..database.schema import User
 from ..core.database import users_collection
@@ -14,30 +15,19 @@ router = APIRouter(
 @router.post("/new_user")
 async def create_user(user: User):
   try:
-    result = await get_user_service(user.email)
-    if not result:
-      try:
-        # Faz com que o Schema seja entregue como JSON
-        users_collection.insert_one(user.model_dump(by_alias=True))
-        logger.info("User saved with success")
-        return JSONResponse(
-          content={"message": "user created successfully"},
-          status_code=201
-        )
-      
-      except Exception as e:
-        logger.exception(f'Error while save new user in database: {e}')
-        return JSONResponse(
-          content={"message": "Error while saving user"},
-          status_code=500
-        )
-    
-    else:
-      logger.info(f'User exists')
-      return JSONResponse(
-        content={"message": "User already existis"},
-        status_code=409
-      )
+    users_collection.insert_one(user.model_dump(by_alias=True))
+    logger.info(f'User {user.email} created successfully')
+    return JSONResponse(
+      content={"message": "User created successfully"},
+      status_code=201
+    )
+
+  except DuplicateKeyError:
+    logger.warning(f'Duplicate email attempted: {user.email}')
+    return JSONResponse(
+      content={"error": "Email already registered"},
+      status_code=409
+    )
 
   except Exception as e:
     logger.exception(f'Error while check user in database {e}')
