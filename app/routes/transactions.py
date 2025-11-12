@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+from datetime import datetime
 
 from ..database.schema import Transactions
-from ..core.database import transaction_collection
+from ..core.database import transaction_collection, get_id
 from ..core.logging import logger
 
 router = APIRouter(
@@ -13,7 +14,13 @@ router = APIRouter(
 @router.post("/new_transaction")
 async def create_transactions(transaction: Transactions):
   try:
-    transaction_collection.insert_one(transaction.model_dump(by_alias=True))
+    item_id = get_id(transaction_collection)
+
+    transaction_collection.insert_one({
+      "id": item_id,
+      **transaction.model_dump()
+    })
+
     logger.info("Transaction created with success.")
     return JSONResponse(
       content={"message": "Transaction created successfully"},
@@ -38,6 +45,8 @@ async def get_all_transactions():
     
     if transactions:
       for t in transactions:
+        if isinstance(t.get("date"), datetime):
+          t["date"] = t["date"].isoformat()
         t["_id"] = str(t["_id"])
 
       logger.info("Transactions finded")
